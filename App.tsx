@@ -35,6 +35,13 @@ const App: React.FC = () => {
         }
       ],
       createdAt: new Date()
+
+        const handleDeleteSession = (id: string) => {
+    setSessions(prev => prev.filter(s => s.id !== id));
+    if (activeSessionId === id) {
+      setActiveSessionId(null);
+    }
+  };
     };
     setSessions(prev => [newSession, ...prev]);
     setActiveSessionId(newSession.id);
