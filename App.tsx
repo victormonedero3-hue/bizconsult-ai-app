@@ -50,25 +50,18 @@ const App: React.FC = () => {
   };
 
   const handleDeleteSession = (id: string) => {
-    if (sessions.length === 1) {
-      // Si solo hay una sesión, la borramos y creamos una nueva
-      setSessions([]);
-      setActiveSessionId(null);
-      setTimeout(() => handleNewChat(), 100);
-    } else {
-      // Si hay más sesiones, borramos la seleccionada
-      setSessions(prev => {
-        const updated = prev.filter(s => s.id !== id);
-        
-        // Si la sesión activa es la que se borró, seleccionamos otra
-        if (activeSessionId === id && updated.length > 0) {
-          setActiveSessionId(updated[0].id);
-          bizConsultAI.startChat(updated[0].messages);
-        }
-        
-        return updated;
-      });
-    }
+    setSessions(prev => {
+      const updated = prev.filter(s => s.id !== id);
+      if (updated.length === 0) {
+        setTimeout(() => handleNewChat(), 100);
+        return [];
+      }
+      if (activeSessionId === id) {
+        setActiveSessionId(updated[0].id);
+        bizConsultAI.startChat(updated[0].messages);
+      }
+      return updated;
+    });
   };
 
   const handleSendMessage = async (e?: React.FormEvent) => {
@@ -162,13 +155,13 @@ const App: React.FC = () => {
       <main className="flex-1 flex flex-col relative h-full">
         <header className="h-16 bg-white border-b border-slate-200 flex items-center justify-between px-6 sticky top-0 z-10 shadow-sm">
           <div className="flex items-center gap-3">
-            <div className="md:hidden h-8 w-8 bg-indigo-500 rounded-lg flex items-center justify-center">
+            <div className="md:hidden h-8 w-8 bg-indigo-600 rounded-lg flex items-center justify-center">
               <svg className="w-5 h-5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M13 10V3L4 14h7v7l9-11h-7z" />
               </svg>
             </div>
             <div>
-              <h2 className="text-sm font-bold text-slate-800 truncate max-w-[200px] md:max-w-none">
+              <h2 className="text-sm font-bold text-slate-800 truncate max-w-[200px] md:max-w-none uppercase">
                 {activeSession?.title || 'BIZCONSULT AI'}
               </h2>
               <div className="flex items-center gap-1.5">
@@ -187,9 +180,9 @@ const App: React.FC = () => {
             {isLoading && !activeSession?.messages[activeSession.messages.length - 1].content && (
               <div className="flex justify-start mb-6">
                 <div className="bg-white border border-slate-100 p-4 rounded-2xl shadow-sm flex items-center gap-2">
-                  <div className="w-2 h-2 bg-slate-300 rounded-full animate-bounce"></div>
-                  <div className="w-2 h-2 bg-slate-300 rounded-full animate-bounce [animation-delay:0.2s]"></div>
-                  <div className="w-2 h-2 bg-slate-300 rounded-full animate-bounce [animation-delay:0.4s]"></div>
+                  <div className="w-2 h-2 bg-indigo-400 rounded-full animate-bounce"></div>
+                  <div className="w-2 h-2 bg-indigo-400 rounded-full animate-bounce [animation-delay:0.2s]"></div>
+                  <div className="w-2 h-2 bg-indigo-400 rounded-full animate-bounce [animation-delay:0.4s]"></div>
                 </div>
               </div>
             )}
@@ -197,7 +190,7 @@ const App: React.FC = () => {
           </div>
         </div>
 
-        <div className="p-4 md:p-6 bg-transparent">
+        <div className="p-4 md:p-6 bg-slate-50 border-t border-slate-200">
           <div className="max-w-3xl mx-auto relative">
             <form 
               onSubmit={handleSendMessage}
@@ -212,7 +205,7 @@ const App: React.FC = () => {
                     handleSendMessage();
                   }
                 }}
-                placeholder="Escribe tu consulta aquí..."
+                placeholder="Describe tu situación o haz una pregunta..."
                 className="w-full bg-transparent border-0 focus:ring-0 resize-none py-3 px-4 text-slate-700 text-sm max-h-32 min-h-[50px] custom-scrollbar"
                 rows={1}
               />
@@ -230,7 +223,7 @@ const App: React.FC = () => {
                 </svg>
               </button>
             </form>
-            <p className="text-[10px] text-center mt-3 text-slate-400 font-medium">
+            <p className="text-[10px] text-center mt-3 text-slate-400 font-medium uppercase tracking-wider">
               BIZCONSULT AI NO PROPORCIONA ASESORÍA LEGAL O FISCAL OFICIAL.
             </p>
           </div>
