@@ -49,6 +49,28 @@ const App: React.FC = () => {
     }
   };
 
+  const handleDeleteSession = (id: string) => {
+    if (sessions.length === 1) {
+      // Si solo hay una sesión, la borramos y creamos una nueva
+      setSessions([]);
+      setActiveSessionId(null);
+      setTimeout(() => handleNewChat(), 100);
+    } else {
+      // Si hay más sesiones, borramos la seleccionada
+      setSessions(prev => {
+        const updated = prev.filter(s => s.id !== id);
+        
+        // Si la sesión activa es la que se borró, seleccionamos otra
+        if (activeSessionId === id && updated.length > 0) {
+          setActiveSessionId(updated[0].id);
+          bizConsultAI.startChat(updated[0].messages);
+        }
+        
+        return updated;
+      });
+    }
+  };
+
   const handleSendMessage = async (e?: React.FormEvent) => {
     if (e) e.preventDefault();
     if (!input.trim() || isLoading || !activeSessionId) return;
@@ -134,6 +156,7 @@ const App: React.FC = () => {
         activeSessionId={activeSessionId}
         onNewChat={handleNewChat}
         onSelectSession={handleSelectSession}
+        onDeleteSession={handleDeleteSession}
       />
 
       <main className="flex-1 flex flex-col relative h-full">
