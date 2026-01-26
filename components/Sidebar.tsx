@@ -7,7 +7,8 @@ interface SidebarProps {
   activeSessionId: string | null;
   onNewChat: () => void;
   onSelectSession: (id: string) => void;
- onDeleteSession: (id: string) => void;}
+  onDeleteSession: (id: string) => void;
+}
 
 const Sidebar: React.FC<SidebarProps> = ({ sessions, activeSessionId, onNewChat, onSelectSession, onDeleteSession }) => {
   return (

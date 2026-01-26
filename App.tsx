@@ -23,7 +23,7 @@ const App: React.FC = () => {
     scrollToBottom();
   }, [activeSession?.messages, scrollToBottom]);
 
-  const handleNewChat = () => {
+  const handleNewChat = useCallback(() => {
     const newSession: ChatSession = {
       id: uuidv4(),
       title: 'Nueva Consultoría',
@@ -35,18 +35,11 @@ const App: React.FC = () => {
         }
       ],
       createdAt: new Date()
-
-        const handleDeleteSession = (id: string) => {
-    setSessions(prev => prev.filter(s => s.id !== id));
-    if (activeSessionId === id) {
-      setActiveSessionId(null);
-    }
-  };
     };
     setSessions(prev => [newSession, ...prev]);
     setActiveSessionId(newSession.id);
     bizConsultAI.startChat();
-  };
+  }, []);
 
   const handleSelectSession = (id: string) => {
     setActiveSessionId(id);
@@ -60,7 +53,8 @@ const App: React.FC = () => {
     setSessions(prev => {
       const updated = prev.filter(s => s.id !== id);
       if (updated.length === 0) {
-        setTimeout(() => handleNewChat(), 100);
+        // Schedule creating a new chat after deletion if none left
+        setTimeout(() => handleNewChat(), 0);
         return [];
       }
       if (activeSessionId === id) {
@@ -83,7 +77,8 @@ const App: React.FC = () => {
 
     setSessions(prev => prev.map(s => {
       if (s.id === activeSessionId) {
-        const newTitle = s.messages.length === 1 ? input.substring(0, 30) + '...' : s.title;
+        const isFirstUserMessage = s.messages.filter(m => m.role === Role.USER).length === 0;
+        const newTitle = isFirstUserMessage ? input.substring(0, 30) + (input.length > 30 ? '...' : '') : s.title;
         return { 
           ...s, 
           title: newTitle,
@@ -119,7 +114,13 @@ const App: React.FC = () => {
           setSessions(prev => prev.map(s => {
             if (s.id === activeSessionId) {
               const updatedMessages = [...s.messages];
-              updatedMessages[updatedMessages.length - 1].content = fullResponse;
+              const lastMsgIndex = updatedMessages.length - 1;
+              if (lastMsgIndex >= 0) {
+                updatedMessages[lastMsgIndex] = {
+                  ...updatedMessages[lastMsgIndex],
+                  content: fullResponse
+                };
+              }
               return { ...s, messages: updatedMessages };
             }
             return s;
@@ -147,7 +148,7 @@ const App: React.FC = () => {
     if (sessions.length === 0) {
       handleNewChat();
     }
-  }, []);
+  }, [handleNewChat, sessions.length]);
 
   return (
     <div className="flex h-screen w-full bg-slate-50 overflow-hidden">
@@ -162,7 +163,7 @@ const App: React.FC = () => {
       <main className="flex-1 flex flex-col relative h-full">
         <header className="h-16 bg-white border-b border-slate-200 flex items-center justify-between px-6 sticky top-0 z-10 shadow-sm">
           <div className="flex items-center gap-3">
-            <div className="md:hidden h-8 w-8 bg-indigo-600 rounded-lg flex items-center justify-center">
+            <div className="md:hidden h-8 w-8 bg-indigo-600 rounded-lg flex items-center justify-center cursor-pointer">
               <svg className="w-5 h-5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M13 10V3L4 14h7v7l9-11h-7z" />
               </svg>
@@ -182,7 +183,7 @@ const App: React.FC = () => {
         <div className="flex-1 overflow-y-auto px-4 py-8 md:px-12 custom-scrollbar bg-slate-50/50">
           <div className="max-w-3xl mx-auto">
             {activeSession?.messages.map((msg, index) => (
-              <MessageBubble key={index} message={msg} />
+              <MessageBubble key={`${activeSessionId}-${index}`} message={msg} />
             ))}
             {isLoading && !activeSession?.messages[activeSession.messages.length - 1].content && (
               <div className="flex justify-start mb-6">
